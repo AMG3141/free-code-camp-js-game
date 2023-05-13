@@ -52,6 +52,13 @@ window.addEventListener("load", function() {
 			
 			this.collisionX += this.speedX * this.speedModifier;
 			this.collisionY += this.speedY * this.speedModifier;
+
+			// Check for collisions with all obstacles
+			this.game.obstacles.forEach(obstacle => {
+				if (this.game.checkCollision(this, obstacle)) {
+					console.log("collision");
+				}
+			});
 		}
 	}
 
@@ -133,6 +140,10 @@ window.addEventListener("load", function() {
 		checkCollision(a, b) {
 			const dx = a.collisionX - b.collisionX;
 			const dy = a.collisionY - b.collisionY;
+			const distance = Math.hypot(dx, dy); // if something doesn't work, maybe check this (he says should be dy first but i think it shouldn't matter)
+			const sumOfRadii = a.collisionRadius + b.collisionRadius;
+			
+			return distance < sumOfRadii;
 		}
 
 		init() {
