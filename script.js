@@ -60,10 +60,23 @@ window.addEventListener("load", function() {
 			this.game = game;
 			this.collisionX = Math.random() * this.game.width;
 			this.collisionY = Math.random() * this.game.height;
-			this.collisionRadius = 100;
+			this.collisionRadius = 60;
+
+			this.image = document.getElementById("obstacles")
+			this.spriteWidth = 250;
+			this.spriteHeight = 250;
+
+			this.width = this.spriteWidth; // useful for scaling
+			this.height = this.spriteHeight; // useful for scaling
+			this.spriteX = this.collisionX - this.width * 0.5;
+			this.spriteY = this.collisionY - this.height * 0.5 - 70;
+
+			this.frameX = Math.floor(Math.random() * 4);
+			this.frameY = Math.floor(Math.random() * 3);
 		}
 
 		draw(context) {
+			context.drawImage(this.image, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.width, this.height);//(file, sourcex, sy, swidth, sheight, destinationx, dy, dwidth, dheight)
 			context.beginPath();
 			context.arc(this.collisionX, this.collisionY, this.collisionRadius, 0, Math.PI * 2);
 			context.save();
@@ -79,8 +92,9 @@ window.addEventListener("load", function() {
 			this.canvas = canvas;
 			this.width = this.canvas.width;
 			this.height = this.canvas.height;
+			this.topMargin = 260;
 			this.player = new Player(this);
-			this.numberOfObstacles = 5;
+			this.numberOfObstacles = 10;
 			this.obstacles = [];
 			this.mouse = {
 				x: this.width / 2,
@@ -116,10 +130,38 @@ window.addEventListener("load", function() {
 			this.obstacles.forEach(obstacle => obstacle.draw(context))
 		}
 
+		checkCollision(a, b) {
+			const dx = a.collisionX - b.collisionX;
+			const dy = a.collisionY - b.collisionY;
+		}
+
 		init() {
 			// Brute force algorithm to pack the circles such that they don't overlap, and have appropriate spacing between each other and the edges
 			let attempts = 0;
-			while ()
+			while (this.obstacles.length < this.numberOfObstacles && attempts < 500) {
+				let testObstacle = new Obstacle(this);
+				let overlap = false;
+
+				this.obstacles.forEach(obstacle => {
+					const dx = testObstacle.collisionX - obstacle.collisionX;
+					const dy = testObstacle.collisionY - obstacle.collisionY;
+					const distance = Math.hypot(dy, dx);
+					const distanceBuffer = 100;
+					const sumOfRadii = testObstacle.collisionRadius + obstacle.collisionRadius + distanceBuffer;
+
+					if (distance < sumOfRadii) {
+						overlap = true;
+					}
+				});
+
+				// have a look at about 45 minutes into the video, still really don't understand quite whats going on here...
+				const margin = testObstacle.collisionRadius * 2;
+				if (!overlap && testObstacle.spriteX > 0 && testObstacle.spriteX < this.width - testObstacle.width && testObstacle.collisionY > this.topMargin + margin && testObstacle.collisionY < this.height - margin) {
+					this.obstacles.push(testObstacle);
+				}
+
+				attempts++;
+			}
 		}
 	}
 
