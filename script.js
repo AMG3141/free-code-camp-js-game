@@ -398,7 +398,7 @@ window.addEventListener("load", function() {
 			this.width = this.canvas.width;
 			this.height = this.canvas.height;
 			this.topMargin = 260;
-			this.debug = true;
+			this.debug = false;
 
 			this.score = 0;
 			this.lostHatchlings = 0;
