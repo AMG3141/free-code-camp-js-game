@@ -8,7 +8,7 @@ window.addEventListener("load", function() {
 	ctx.fillStyle = "white";
 	ctx.lineWidth = 3;
 	ctx.strokeStyle = "black";
-	ctx.font = "40px Helvetica";
+	ctx.font = "40px Bangers";
 	ctx.textAlign = "center";
 
 	class Player {
@@ -33,6 +33,13 @@ window.addEventListener("load", function() {
 			this.spriteY;
 			this.frameX = 0;
 			this.frameY = 0;
+		}
+
+		restart() {
+			this.collisionX = this.game.width / 2;
+			this.collisionY = this.game.height / 2;
+			this.spriteX = this.collisionX - this.width / 2;
+			this.spriteY = this.collisionY - this.height / 2 - 100;
 		}
 
 		draw(context) {
@@ -237,13 +244,13 @@ window.addEventListener("load", function() {
 		update() {
 			this.collisionY -= this.speedY;
 			this.spriteX = this.collisionX - this.width / 2;
-			this.spriteY = this.collisionY - this.height / 2 - 50;
+			this.spriteY = this.collisionY - this.height / 2 - 40;
 
 			// Safety
 			if (this.collisionY < this.game.topMargin) {
 				this.markedForDeletion = true;
 				this.game.removeGameObjects();
-				this.game.score++;
+				if (!this.game.gameOver) this.game.score++;
 
 				for (let i = 0; i < 3; i++) {
 					this.game.particles.push(new Firefly(this.game, this.collisionX, this.collisionY, "yellow"));
@@ -251,7 +258,7 @@ window.addEventListener("load", function() {
 			}
 
 			// Collisions with player and objects
-			let collisionObjects = [this.game.player, ...this.game.obstacles]; // ... is spread operator (expands the elements in the array)
+			let collisionObjects = [this.game.player, ...this.game.obstacles, ...this.game.eggs]; // ... is spread operator (expands the elements in the array)
 			collisionObjects.forEach(collisionObject => {
 				let [ collision, distance, sumOfRadii, dx, dy ] = this.game.checkCollision(this, collisionObject);
 				if (collision) {
@@ -267,7 +274,7 @@ window.addEventListener("load", function() {
 				if (this.game.checkCollision(this, enemy)[0]) {
 					this.markedForDeletion = true;
 					this.game.removeGameObjects();
-					this.game.lostHatchlings++;
+					if (!this.game.gameOver) this.game.lostHatchlings++;
 					for (let i = 0; i < 5; i++) {
 						this.game.particles.push(new Spark(this.game, this.collisionX, this.collisionY, "blue"));
 					}
@@ -281,7 +288,7 @@ window.addEventListener("load", function() {
 			this.game = game;
 			this.collisionRadius = 30;
 			this.speedX = Math.random() * 3 + 0.5;
-			this.image = document.getElementById("toad")
+			this.image = document.getElementById("toads")
 			this.spriteWidth = 140;
 			this.spriteHeight = 260;
 			this.width = this.spriteWidth;
@@ -290,10 +297,12 @@ window.addEventListener("load", function() {
 			this.collisionY = this.game.topMargin + Math.random() * (this.game.height - this.game.topMargin);
 			this.spriteX;
 			this.spriteY;
+			this.frameX = 0;
+			this.frameY = Math.floor(Math.random() * 4);
 		}
 
 		draw(context) {
-			context.drawImage(this.image, this.spriteX, this.spriteY);
+			context.drawImage(this.image, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.width, this.height);
 
 			if (this.game.debug) {
 				context.beginPath();
@@ -311,9 +320,10 @@ window.addEventListener("load", function() {
 			this.spriteY = this.collisionY - this.height + 40;
 			this.collisionX -= this.speedX;
 
-			if (this.spriteX + this.width < 0) {
+			if (this.spriteX + this.width < 0 && !this.game.gameOver) {
 				this.collisionX = this.game.width + this.width + Math.random() * this.game.width * 0.5;
 				this.collisionY = this.game.topMargin + Math.random() * (this.game.height - this.game.topMargin);
+				this.frameY = Math.floor(Math.random() * 4);
 			}
 
 			let collisionObjects = [this.game.player, ...this.game.obstacles]; // ... is spread operator (expands the elements in the array)
@@ -391,11 +401,13 @@ window.addEventListener("load", function() {
 
 			this.score = 0;
 			this.lostHatchlings = 0;
+			this.winningScore = 30;
+			this.gameOver = false;
 
 			this.player = new Player(this);
 			this.numberOfObstacles = 10;
 			this.obstacles = [];
-			this.maxEggs = 10;
+			this.maxEggs = 5;
 			this.eggs = [];
 			this.gameObjects = [];
 			this.enemies = [];
@@ -412,7 +424,6 @@ window.addEventListener("load", function() {
 				x: this.width / 2,
 				y: this.height / 2,
 				pressed: false
-
 			}
 
 			canvas.addEventListener("mousedown", (e) => { // arrow function used so that this keyword comes from parent scope
@@ -436,6 +447,7 @@ window.addEventListener("load", function() {
 
 			window.addEventListener("keydown", e => {
 				if (e.key == "d") this.debug = !this.debug;
+				else if (e.key == "r") this.restart()
 			});
 		}
 		
@@ -459,7 +471,7 @@ window.addEventListener("load", function() {
 
 			this.timer += deltaTime;
 
-			if (this.eggTimer > this.eggInterval && this.eggs.length < this.maxEggs) {
+			if (this.eggTimer > this.eggInterval && this.eggs.length < this.maxEggs && !this.gameOver) {
 				this.addEgg()
 				this.eggTimer = 0;
 			} else {
@@ -468,12 +480,50 @@ window.addEventListener("load", function() {
 
 			// Draw status text
 			context.save();
+			
 			context.textAlign = "left";
 			context.fillText("Score: " + this.score, 25, 50);
 			if (this.debug) {
 				context.fillText("Lost: " + + this.lostHatchlings, 25, 100);
 			}
+
 			context.restore();
+
+			// Win / lose message
+			if (this.score >= this.winningScore) {
+				this.gameOver = true;
+				context.save()
+
+				context.fillStyle = "rgba(0,0,0,0.5)";
+				context.fillRect(0, 0, this.width, this.height);
+
+				context.fillStyle = "white";
+				context.textAlign = "centre";
+
+				context.shadowOffsetX = 4;
+				context.shadowOffetY = 4;
+				context.shadowColor = "black";
+				let message1;
+				let message2;
+
+				if (this.lostHatchlings <= 5) {
+					// Win
+					message1 = "Bullseye!!!"
+					message2 = "You bullied the bullies!";
+				} else {
+					// Lose
+					message1 = "Bullocks!";
+					message2 = "You lost " + this.lostHatchlings + " hatchlings, don't be a pushover!";
+				}
+
+				context.font = "130px Bangers";
+				context.fillText(message1, this.width / 2, this.height / 2 - 20);
+				context.font = "40px Bangers";
+				context.fillText(message2, this.width / 2, this.height / 2 + 30);
+				context.fillText("Final score " + this.score + ". Press 'R' to butt heads again!", this.width / 2, this.height / 2 + 80);
+
+				context.restore();
+			}
 		}
 
 		checkCollision(a, b) {
@@ -499,8 +549,27 @@ window.addEventListener("load", function() {
 			this.particles = this.particles.filter(particle => !particle.markedForDeletion);
 		}
 
+		restart() {
+			this.player.restart();
+			this.obstacles = [];
+			this.eggs = [];
+			this.gameObjects = [];
+			this.enemies = [];
+			this.hatchlings = [];
+			this.particles = [];
+			this.mouse = {
+				x: this.width * 0.5,
+				y: this.height * 0.5,
+				pressed: false
+			}
+			this.score = 0;
+			this.lostHatchlings = 0;
+			this.gameOver = false;
+			this.init();
+		}
+
 		init() {
-			for (let i = 0; i < 3; i++ ) {
+			for (let i = 0; i < 5; i++ ) {
 				this.addEnemy();
 			}
 
