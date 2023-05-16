@@ -43,7 +43,8 @@ window.addEventListener("load", function() {
 		}
 
 		draw(context) {
-			context.drawImage(this.image, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.spriteWidth, this.spriteHeight)
+			if (this.frameX == 59) this.frameX = 0;
+			context.drawImage(this.image, this.frameX++ * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.spriteWidth, this.spriteHeight)
 
 			if (this.game.debug) {
 				context.beginPath();
