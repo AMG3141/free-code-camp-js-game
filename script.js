@@ -2,8 +2,7 @@ import { Game } from "./classes/Game.js";
 
 window.addEventListener("load", function() {
 	// Set the canvas size to be the same as the image size to prevent distortion
-	const canvas = document.createElement("canvas1");
-	// const canvas = document.getElementById("canvas1");
+	const canvas = document.getElementById("canvas1");
 	const ctx = canvas.getContext("2d")
 	canvas.width = 1280;
 	canvas.height = 720;
