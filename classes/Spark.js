@@ -1,3 +1,5 @@
+import { Particle } from "./Particle.js";
+
 class Spark extends Particle {
 	update() {
 		this.angle += this.va * 0.5;
